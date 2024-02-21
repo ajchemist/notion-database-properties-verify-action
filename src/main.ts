@@ -1,5 +1,9 @@
 import * as core from '@actions/core'
-import { wait } from './wait'
+import { Client } from '@notionhq/client'
+
+interface DatabaseSpec {
+  [propertyName: string]: string
+}
 
 /**
  * The main function for the action.
@@ -7,20 +11,39 @@ import { wait } from './wait'
  */
 export async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
+    const notionToken = core.getInput('notion_token')
+    const databaseId = core.getInput('database_id')
+    const expectedSpec: DatabaseSpec = JSON.parse(
+      core.getInput('database_spec')
+    )
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    //
+    const notion = new Client({ auth: notionToken })
+    const response = await notion.databases.retrieve({
+      database_id: databaseId
+    })
+    const properties = response.properties
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    //
+    for (const [key, value] of Object.entries(expectedSpec)) {
+      if (!properties[key]) {
+        throw new Error(`Property ${key} does not exist.`)
+      }
+      const propertyType = properties[key].type
+      if (propertyType !== value) {
+        throw new Error(
+          `Property ${key} is of type ${propertyType}, expected ${value}.`
+        )
+      }
+    }
 
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
-  } catch (error) {
-    // Fail the workflow run if an error occurs
-    if (error instanceof Error) core.setFailed(error.message)
+    // action outputs
+    core.setOutput('validation_success', 'true')
+    core.setOutput('failure_reason', '')
+    console.log('Validation successful')
+  } catch (error: any) {
+    core.setFailed(`Action failed with error: ${error.message}`)
+    core.setOutput('validation_success', 'false')
+    core.setOutput('failure_reason', error)
   }
 }

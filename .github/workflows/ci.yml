@@ -55,7 +55,12 @@ jobs:
         id: test-action
         uses: ./
         with:
-          milliseconds: 2000
+          notion_token: ${{ secrets.NOTION_TOKEN }}
+          database_id: ${{ secrets.DATABASE_ID  }}
+          database_spec: |
+            {
+              "tags": "multi_select"
+            }
 
       - name: Print Output
         id: output

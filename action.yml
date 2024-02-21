@@ -1,23 +1,31 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Notion database properties validator'
+description: 'Validates Notion Database properties against user-defined specifications'
+author: 'ajchemist'
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
-  icon: 'heart'
+  icon: 'command'
   color: 'red'
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
+  notion_token:
+    description: 'Notion API Token'
     required: true
-    default: '1000'
+  database_id:
+    description: 'Notion Database ID'
+    required: true
+  database_spec:
+    description: 'JSON string specifying the expected database configuration'
+    required: true    
+
 
 # Define your outputs here.
 outputs:
-  time:
-    description: 'Your output description here'
+  validation_success:
+    description: 'Boolean indicating whether the validation was successful'
+  failure_reason:
+    description: 'Description of why the validation failed, if it did'
 
 runs:
   using: node20
